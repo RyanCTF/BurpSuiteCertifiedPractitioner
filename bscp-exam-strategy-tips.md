@@ -6,7 +6,7 @@ that just became reachable and test only the stage-appropriate vuln classes agai
 
 | Vuln class | Stage 1 | Stage 2 | Stage 3 |
 |---|---|---|---|
-| SQL injection | | yes | |
+| SQL injection | | yes | yes |
 | XSS / DOM-based / CSRF / clickjacking / CORS | yes | yes | |
 | Access control / Authentication / JWT / OAuth | yes | yes | |
 | HTTP request smuggling / Host-header / Web cache poisoning | yes | yes | |
@@ -21,6 +21,8 @@ that just became reachable and test only the stage-appropriate vuln classes agai
 The 7 file-read classes (XXE, SSRF, OS cmd, SSTI, directory traversal, insecure deserialization,
 file upload) are **stage-3 only** - they read `/home/carlos/secret`. Stages 1 and 2 are get-a-
 foothold then escalate-to-admin, never a file-read class. Don't hunt command injection at the start.
+
+Note: SQLi spans stages - it's the usual stage-2 privesc, and it can ALSO be the stage-3 file read when the DB account has file privileges (`load_file`/`COPY`/`pg_read_file` to read `/home/carlos/secret`).
 
 Exam objective recap: Stage 1 = low-privileged user account, Stage 2 = administrator account,
 Stage 3 = read `/home/carlos/secret` and submit its content.
